@@ -70,7 +70,7 @@ Resources:
                   - "lambda:UpdateFunctionCode"
                   - "lambda:PublishVersion"
                 Resource:
-                  - "arn:aws:lambda:*:*:function:*-ConnectorApiLambdaFunction*"
+                  - "arn:aws:lambda:*:*:function:*-ConnectorApiLam*"
   CopyLambda:
     Type: Custom::CopyZips
     Properties:
