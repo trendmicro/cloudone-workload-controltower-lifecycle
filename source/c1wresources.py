@@ -4,15 +4,16 @@ from botocore.exceptions import ClientError
 import base64
 import logging
 import json
+import os
 
 logger = logging.getLogger()
 
 
 SECRET_ID = "TrendMicro/CloudOne/WorkloadApiKey"
 ControlTowerRoleName = "AWSControlTowerExecution"
-CloudOneWorkloadAccountId = "147995105371"
 IamRoleName = "CloudOneWorkloadConnectorRole"
 IamPolicyName = "CloudOneWorkloadConnectorPolicy"
+CloudOneWorkloadAccountId = os.environ["AccountIdForRole"]
 
 
 def get_api_key():

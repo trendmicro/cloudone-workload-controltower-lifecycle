@@ -158,16 +158,25 @@ def update_policy(aws_account_id):
         logger.info(f'Policy not found; configuring account')
         configure_account(aws_account_id)
         return
+    logger.info(f'Updating AssumeRolePolicyDocument in account {aws_account_id}')
+    try:
+        update_assume_role_response = client.update_assume_role_policy(
+            RoleName=c1wresources.IamRoleName,
+            PolicyDocument=c1wresources.get_assume_role_policy_document()
+        )
+    except Exception as e:
+        logger.info(f'Failed to update AssumeRolePolicyDocument: {e}')
+        raise
     try:
         policy = policy_resource.Policy(f'arn:aws:iam::{aws_account_id}:policy/{c1wresources.IamPolicyName}')
         version = policy.default_version
         new_version_response = client.create_policy_version(
-            PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{c1wresources.IamPolicyName}1',
+            PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{c1wresources.IamPolicyName}',
             PolicyDocument=json.dumps(c1wresources.policy_document),
             SetAsDefault=True
         )
         delete_old_version_response = client.delete_policy_version(
-            PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{c1wresources.IamPolicyName}1',
+            PolicyArn=f'arn:aws:iam::{aws_account_id}:policy/{c1wresources.IamPolicyName}',
             VersionId=version.version_id
         )
     except Exception as e:

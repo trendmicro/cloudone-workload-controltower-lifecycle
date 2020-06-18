@@ -9,9 +9,10 @@ Metadata:
         Parameters:
           - ApiKey
       - Label:
-          default: "Optional Parameters"
+          default: "Parameters for Deep Security Manager deployments. Leave defaults for Cloud One Workload Security"
         Parameters:
           - ApiEndpoint
+          - DeepSecurityManagerAccount
 
 Parameters:
   ApiKey:
@@ -22,13 +23,19 @@ Parameters:
   ApiEndpoint:
     Type: String
     Description: Server FQDN:Port for Deep Security Manager. Leave default for Cloud One Workload Security
-    AllowedPattern : ".+"
+    AllowedPattern: ".+"
     Default: 'app.deepsecurity.trendmicro.com'
+  DeepSecurityManagerAccount:
+    Type: String
+    Description: AWS account ID for the shared security accoung where Deep Security Manager is deployed. Leave default for Cloud One Workload Security
+    AllowedPattern: '^\d{12}$'
+    NoEcho: True
+    Default: 147995105371
 
 Mappings:
   LifeCycleRelease:
     Release:
-      Stamp: 1591895732
+      Stamp: 1592492748
 
 Resources:
   LambdaBucket:
@@ -198,6 +205,7 @@ Resources:
                   - "iam:CreatePolicyVersion"
                   - "iam:DeletePolicyVersion"
                   - "iam:SetDefaultPolicyVersion"
+                  - "iam:UpdateAssumeRolePolicy"
                 Resource:
                   - "arn:aws:iam::*:role/CloudOneWorkloadConnectorRole"
                   - "arn:aws:iam::*:policy/CloudOneWorkloadConnectorPolicy*"
@@ -209,6 +217,7 @@ Resources:
       Environment:
         Variables:
           ApiEndpoint: !Ref ApiEndpoint
+          AccountIdForRole: !Ref DeepSecurityManagerAccount
       Code:
         S3Bucket: !Ref LambdaBucket
         S3Key: c1w-controltower-lifecycle.zip
