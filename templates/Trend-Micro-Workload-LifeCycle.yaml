@@ -35,7 +35,7 @@ Parameters:
 Mappings:
   LifeCycleRelease:
     Release:
-      Stamp: 1592492748
+      Stamp: 1592493892
 
 Resources:
   LambdaBucket:
