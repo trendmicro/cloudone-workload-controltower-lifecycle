@@ -35,7 +35,7 @@ Parameters:
 Mappings:
   LifeCycleRelease:
     Release:
-      Stamp: 1592493892
+      Stamp: 1593439616
 
 Resources:
   LambdaBucket:
@@ -186,7 +186,7 @@ Resources:
                   - "sts:AssumeRole"
                 Resource:
                   - !Ref ApiKeySecret
-                  - "arn:aws:iam::*:role/*"
+                  - "arn:aws:iam::*:role/AWSControlTowerExecution"
               - Effect: Allow
                 Action: "lambda:InvokeFunction"
                 Resource:
