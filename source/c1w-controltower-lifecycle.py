@@ -1,11 +1,13 @@
-import time
-import boto3
 import json
-import c1wconnectorapi
-import ctlifecycleevent
 import logging
+import time
+
+import boto3
+
+import c1wconnectorapi
 import c1wresources
 import cfnhelper
+import ctlifecycleevent
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -115,7 +117,7 @@ def assume_role(aws_account_number, role_name) -> boto3.Session:
         raise e
 
 
-def configure_account(aws_account_id):
+def configure_account(aws_account_id, aws_account_name):
     c1w_connector = c1wconnectorapi.CloudOneConnector(c1wresources.get_api_key())
     iam_client = boto3.client('iam')
     try:
@@ -130,7 +132,7 @@ def configure_account(aws_account_id):
         logger.info(f'Failed to configure account {aws_account_id} with exception: {e}')
     try:
         return c1w_connector.add_connector(f'arn:aws:iam::{aws_account_id}:role/{c1wresources.IamRoleName}',
-                                           aws_account_id)
+                                           aws_account_id, aws_account_name)
     except Exception as e:
         logger.info(f'Failed to add workload connector with exception {e}')
 
@@ -146,8 +148,8 @@ def remove_account_config(aws_account_id):
         logger.info(f'Failed to remove account {aws_account_id} config with exception: {e}')
 
 
-def update_policy(aws_account_id):
-    logger.info(f'Updating account {aws_account_id}')
+def update_policy(aws_account_id, aws_account_name):
+    logger.info(f'Updating account {aws_account_name} ({aws_account_id})')
     sts_session = assume_role(aws_account_id, c1wresources.ControlTowerRoleName)
     client = sts_session.client('iam')
     policy_resource = sts_session.resource('iam')
@@ -185,25 +187,27 @@ def update_policy(aws_account_id):
 
 
 def get_accounts():
-    account_ids = []
+    account_infos = []
     client = boto3.client('organizations')
     paginator = client.get_paginator('list_accounts')
     page_iterator = paginator.paginate()
     for page in page_iterator:
         for account in page.get('Accounts'):
-            account_ids.append(account.get('Id'))
-    return account_ids
+            acct_id = account["Id"]
+            acct_name = account.get("Name", "")
+            account_infos.append((acct_id, acct_name))
+    return account_infos
 
 
 def fresh_deploy(function_name):
     client = boto3.client('lambda')
     logger.info(f'Received function name {function_name} from context')
     count = 0
-    for account_id in get_accounts():
+    for account_id, account_name in get_accounts():
         client.invoke(
             FunctionName=function_name,
             InvocationType='Event',
-            Payload=json.dumps({'InvokeAction': 'configure_account', 'account_id': account_id})
+            Payload=json.dumps({'InvokeAction': 'configure_account', 'account_id': account_id, 'account_name': account_name})
         )
         count += 1
     print(f'Launched configure_account for {count} accounts')
@@ -214,11 +218,11 @@ def update_accounts(function_name):
     client = boto3.client('lambda')
     logger.info(f'Received function name {function_name} from context')
     count = 0
-    for account_id in get_accounts():
+    for account_id, account_name in get_accounts():
         client.invoke(
             FunctionName=function_name,
             InvocationType='Event',
-            Payload=json.dumps({'InvokeAction': 'update_account', 'account_id': account_id})
+            Payload=json.dumps({'InvokeAction': 'update_account', 'account_id': account_id, 'account_name': account_name})
         )
         count += 1
     print(f'Launched update_accounts for {count} accounts')
@@ -270,9 +274,9 @@ def lambda_handler(event, context):
             response.send(cfnhelper.responseCode.SUCCESS)
     elif 'InvokeAction' in event:
         if event['InvokeAction'] == 'configure_account':
-            configure_account(event['account_id'])
+            configure_account(event['account_id'], event['account_name'])
         elif event['InvokeAction'] == 'update_account':
-            update_policy(event['account_id'])
+            update_policy(event['account_id'], event['account_name'])
         elif event['InvokeAction'] == 'remove_account_config':
             remove_account_config(event['account_id'])
         elif event['InvokeAction'] == 'remove_all':
@@ -284,7 +288,7 @@ def lambda_handler(event, context):
             logger.info(f'Did not find a supported event')
             return
         if life_cycle_event.create_account:
-            configure_account(life_cycle_event.child_account_id)
+            configure_account(life_cycle_event.child_account_id, life_cycle_event.child_account_name)
         elif life_cycle_event.event_name == 'RemoveAccount':
             remove_account_config(life_cycle_event.child_account_id)
         else:

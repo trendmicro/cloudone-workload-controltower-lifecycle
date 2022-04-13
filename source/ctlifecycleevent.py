@@ -13,6 +13,8 @@ class LifeCycleEvent:
         self.create_status = event['detail']['serviceEventDetails']['createManagedAccountStatus']['state']
         self.child_account_id = event['detail']['serviceEventDetails']['createManagedAccountStatus']\
             ['account']['accountId']
+        self.child_account_name = event['detail']['serviceEventDetails']['createManagedAccountStatus']\
+            ['account']['accountName']
 
     @property
     def create_account(self):

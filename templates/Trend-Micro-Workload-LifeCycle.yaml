@@ -17,14 +17,14 @@ Metadata:
 Parameters:
   ApiKey:
     Type: String
-    Description: API Key for Cloud One Workload or Deep Security Manager
+    Description: API key for Cloud One-Workload Security (Using the Workload Security console) or Deep Security manager.
     AllowedPattern : ".+"
     NoEcho: True
   ApiEndpoint:
     Type: String
-    Description: Server FQDN:Port for Deep Security Manager. Leave default for Cloud One Workload Security
+    Description: "Server FQDN: Port for Deep Security manager. Leave default for Cloud One Workload Security or change for your specific Cloud One region."
     AllowedPattern: ".+"
-    Default: 'app.deepsecurity.trendmicro.com'
+    Default: 'workload.us-1.cloudone.trendmicro.com'
   DeepSecurityManagerAccount:
     Type: String
     Description: AWS account ID for the shared security accoung where Deep Security Manager is deployed. Leave default for Cloud One Workload Security
@@ -35,7 +35,7 @@ Parameters:
 Mappings:
   LifeCycleRelease:
     Release:
-      Stamp: 1593439616
+      Stamp: 1593439617
 
 Resources:
   LambdaBucket:
